@@ -21,71 +21,76 @@ public class TinySearchEngine implements TinySearchEngineBase {
     }
 
     TinySearchEngine() {
-        words = new ArrayList();
+        docs = new SortedList();
+        lastDocument = null;
     }
     
     @Override
     public void insert(Word word, Attributes atrbts) {
-        int index = binarySearch(word.word, 0, words.size());
-        if (index == words.size()) {
-            words.add(new WordWrapper(word, atrbts));
-            return;
-        }
-        WordWrapper wrap = words.get(index);
-        if (wrap.string.compareToIgnoreCase(word.word) == 0)
-            wrap.attributes.add(new WordAttribute(word, atrbts));
-        else
-            words.add(index, new WordWrapper(word, atrbts));
+        if (lastDocument == null || lastDocument.document.compareTo(atrbts.document) != 0)
+            lastDocument = docs.insert(new DocumentWrap(atrbts.document));
+        WordWrap ww = lastDocument.words.insert(new WordWrap(word.word));
+        AttributeWrap aw = ww.attributes.insert(new AttributeWrap(word, atrbts));
+        aw.count++;
     }
 
     @Override
     public List<Document> search(String string) {
-        List<Document> list = new LinkedList<>();
-        WordWrapper wrap = words.get(binarySearch(string, 0, words.size()));
-        if (wrap.string.compareToIgnoreCase(string) == 0)
-            wrap.attributes.forEach((attribute) -> {
-                if (!list.contains(attribute.document))
-                    list.add(attribute.document);
-            });
+        List<Document> list = new LinkedList();
+        docs.forEach(doc -> {
+            WordWrap word = doc.words.find(new WordWrap(string));
+            if (word != null)
+                list.add(doc.document);
+        });
         return list;
     }
     
-    private final ArrayList<WordWrapper> words;
+    private final SortedList<DocumentWrap> docs;
+    private DocumentWrap lastDocument;
     
-    private class WordAttribute {
-        public final PartOfSpeech pos;
+    private class DocumentWrap implements Comparable<DocumentWrap> {
         public final Document document;
-        public final int occurance;
+        public final SortedList<WordWrap> words;
         
-        public WordAttribute(Word word, Attributes attr) {
+        public DocumentWrap(Document document) {
+            this.document = document;
+            words = new SortedList();
+        }
+
+        @Override
+        public int compareTo(DocumentWrap o) {
+            return document.compareTo(o.document);
+        }
+    }
+    
+    private class WordWrap implements Comparable<WordWrap> {
+        public final String string;
+        public final SortedList<AttributeWrap> attributes;
+        
+        public WordWrap(String string) {
+            this.string = string;
+            attributes = new SortedList();
+        }
+
+        @Override
+        public int compareTo(WordWrap o) {
+            return string.compareToIgnoreCase(o.string);
+        }
+    }
+    
+    private class AttributeWrap implements Comparable<AttributeWrap> {
+        public final PartOfSpeech pos;
+        public final int occurance;
+        public int count = 0;
+        
+        public AttributeWrap(Word word, Attributes attr) {
             pos = word.pos;
-            document = attr.document;
             occurance = attr.occurrence;
         }
-    }
-    
-    private class WordWrapper {
-        public final String string;
-        public final List<WordAttribute> attributes;
-        
-        public WordWrapper(Word word, Attributes attr) {
-            string = word.word;
-            attributes = new LinkedList<>();
-            attributes.add(new WordAttribute(word, attr));
+
+        @Override
+        public int compareTo(AttributeWrap o) {
+            return pos.compareTo(o.pos);
         }
-    }
-    
-    private int binarySearch(String key, int lo, int hi) {
-        if (hi <= lo)
-            return hi;
-        
-        int mid = lo + (hi - lo) / 2;
-        int cmp = key.compareToIgnoreCase(words.get(mid).string);
-        if (cmp < 0)
-            return binarySearch(key, lo, mid);
-        else if (cmp > 0)
-            return binarySearch(key, mid + 1, hi);
-        else
-            return mid;
     }
 }
