@@ -12,18 +12,32 @@ import java.util.ListIterator;
 import java.util.function.Consumer;
 
 /**
- *
- * @author thegr
- * @param <T>
+ *  An always sorted list of comparable objects.
+ *  One special syntax is the insert one, check the function definition for it
+ * 
+ * @author Griffone
+ * @param <T extends Comparable<T>>
  */
 public class SortedList<T extends Comparable<T>> {
     
     private final ArrayList<T> list;
     
+    /**
+     * Creates the SortedList
+     */
     public SortedList() {
         list = new ArrayList();
     }
     
+    /**
+     * 
+     * Tries to find the object in the list, inserting it in place if none were found
+     * Because it can return an object that already exists one should use:
+     * T t = insert(new T())
+     * 
+     * @param object the object to insert
+     * @return The inserted object (if one already exists in the list, no insertion will actually happen, and you should use the returned object in that case)
+     */
     public T insert(T object) {
         int index = binarySearch(object, 0, list.size());
         if (index == list.size()) {
@@ -50,16 +64,33 @@ public class SortedList<T extends Comparable<T>> {
             return mid;
     }
     
+    /**
+     * Perform provided action for every T in the list
+     * 
+     * @param action lambda expression to perform
+     */
     public void forEach(Consumer<? super T> action) {
         list.forEach(action);
     }
     
+    /**
+     * Tries to find key in the list
+     * 
+     * @param key a comparable key
+     * @return Object if one similar to key is found or null otherwise
+     */
     public T find(T key) {
         int index = binarySearch(key, 0, list.size());
         T obj = list.get(index);
         return (obj.compareTo(key) == 0) ? obj : null;
     }
     
+    /**
+     * Unite two sorted lists, where any objects that compareTo(obj) == 0 are only copied once
+     * 
+     * @param other the other list
+     * @return new sorted list, that is a union of the two
+     */
     public SortedList<T> union(SortedList<T> other) {
         if (list.isEmpty())
             return other;
@@ -83,9 +114,5 @@ public class SortedList<T extends Comparable<T>> {
         }
         while (lt.hasNext()) newList.list.add(lt.next());
         return newList;
-    }
-    
-    public List<T> toList() {
-        return list;
     }
 }
