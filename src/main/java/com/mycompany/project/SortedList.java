@@ -6,6 +6,9 @@
 package com.mycompany.project;
 
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
 import java.util.function.Consumer;
 
 /**
@@ -55,5 +58,34 @@ public class SortedList<T extends Comparable<T>> {
         int index = binarySearch(key, 0, list.size());
         T obj = list.get(index);
         return (obj.compareTo(key) == 0) ? obj : null;
+    }
+    
+    public SortedList<T> union(SortedList<T> other) {
+        if (list.isEmpty())
+            return other;
+        else if (other.list.isEmpty())
+            return this;
+        SortedList<T> newList = new SortedList();
+        Iterator<T> it = list.iterator();
+        ListIterator<T> lt = other.list.listIterator();
+        while (it.hasNext()) {
+            T item = it.next();
+            int compare = -1;
+            while (lt.hasNext() && compare < 0) {
+                T o = lt.next();
+                compare = o.compareTo(item);
+                if (compare < 0)
+                    newList.list.add(o);
+                else if (compare > 0)
+                    lt.previous();
+            }
+            newList.list.add(item);
+        }
+        while (lt.hasNext()) newList.list.add(lt.next());
+        return newList;
+    }
+    
+    public List<T> toList() {
+        return list;
     }
 }

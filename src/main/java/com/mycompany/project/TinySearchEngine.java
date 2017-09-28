@@ -36,17 +36,56 @@ public class TinySearchEngine implements TinySearchEngineBase {
 
     @Override
     public List<Document> search(String string) {
-        List<Document> list = new LinkedList();
-        docs.forEach(doc -> {
-            WordWrap word = doc.words.find(new WordWrap(string));
-            if (word != null)
-                list.add(doc.document);
-        });
-        return list;
+        String[] words = string.split(" ");
+        boolean sorting = false;
+        SortedList<Result> list = new SortedList();
+        for (String word : words) {
+            if (word.compareToIgnoreCase("sortby") == 0)
+                sorting = true;
+            else if (sorting) {
+                // TODO: sort results
+            } else
+                list = list.union(find(word));
+        }
+        List<Document> results = new LinkedList();
+        list.forEach(doc -> results.add(doc.document));
+        return results;
     }
     
     private final SortedList<DocumentWrap> docs;
     private DocumentWrap lastDocument;
+    
+    private SortedList<Result> find(String word) {
+        SortedList<Result> list = new SortedList();
+        docs.forEach(doc -> {
+            WordWrap ww = doc.words.find(new WordWrap(word));
+            if (ww != null)
+                ww.attributes.forEach(attr -> {
+                    list.insert(new Result(doc.document, attr));
+                });
+        });
+        return list;
+    }
+    
+    private class Result implements Comparable<Result> {
+
+        public final Document document;
+        public final AttributeWrap attr;
+        
+        Result(Document document, AttributeWrap attr) {
+            this.document = document;
+            this.attr = attr;
+        }
+        
+        @Override
+        public int compareTo(Result o) {
+            if (document.compareTo(o.document) == 0)
+                return attr.compareTo(o.attr);
+            else
+                return document.compareTo(o.document);
+        }
+        
+    }
     
     private class DocumentWrap implements Comparable<DocumentWrap> {
         public final Document document;
