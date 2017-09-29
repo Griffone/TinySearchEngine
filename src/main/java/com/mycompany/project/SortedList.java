@@ -107,7 +107,7 @@ public class SortedList<T extends Comparable<T>> {
                 compare = o.compareTo(item);
                 if (compare < 0)
                     newList.list.add(o);
-                else if (compare > 0)
+                else if (compare >= 0)
                     lt.previous();
             }
             newList.list.add(item);
