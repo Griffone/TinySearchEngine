@@ -6,8 +6,8 @@
 package com.mycompany.project;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Iterator;
-import java.util.List;
 import java.util.ListIterator;
 import java.util.function.Consumer;
 
@@ -71,6 +71,23 @@ public class SortedList<T extends Comparable<T>> {
      */
     public void forEach(Consumer<? super T> action) {
         list.forEach(action);
+    }
+    
+    public SortedList<T> bubbleSort(Comparator<? super T> comp) {
+        int r = list.size() - 1;
+        boolean swapped = true;
+        while (swapped && r >= 0) {
+            swapped = false;
+            for (int i = 0; i < r; i++)
+                if (comp.compare(list.get(i), list.get(i + 1)) > 0) {
+                    T x = list.get(i);
+                    list.set(i, list.get(i + 1));
+                    list.set(i + 1, x);
+                    swapped = true;
+                }
+            r--;
+        }
+        return this;
     }
     
     /**

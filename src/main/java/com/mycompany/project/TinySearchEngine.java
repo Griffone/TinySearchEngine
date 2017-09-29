@@ -38,18 +38,29 @@ public class TinySearchEngine implements TinySearchEngineBase {
     public List<Document> search(String string) {
         String[] words = string.split(" ");
         boolean sorting = false;
+        SortBy sb = SortBy.SORTBY_DOCUMENT;
+        boolean asc = false;
         SortedList<Result> list = new SortedList();
         for (String word : words) {
             if (word.compareToIgnoreCase("sortby") == 0)
                 sorting = true;
             else if (sorting) {
-                // TODO: sort results
+                if (word.compareToIgnoreCase("document") == 0 || word.compareToIgnoreCase("doc") == 0)
+                    sb = SortBy.SORTBY_DOCUMENT;
+                else if (word.compareToIgnoreCase("count") == 0)
+                    sb = SortBy.SORTBY_COUNT;
+                else if (word.compareToIgnoreCase("popularity") == 0 || word.compareToIgnoreCase("pop") == 0)
+                    sb = SortBy.SORTBY_POPULARITY;
+                else if (word.compareToIgnoreCase("occurance") == 0 || word.compareToIgnoreCase("occ") == 0)
+                    sb = SortBy.SORTBY_OCCURANCE;
+                else if (word.compareToIgnoreCase("asc") == 0 || word.compareToIgnoreCase("down") == 0)
+                    asc = true;
+                else if (word.compareToIgnoreCase("decs") == 0 || word.compareToIgnoreCase("up") == 0)
+                    asc = false;
             } else
                 list = list.union(find(word));
         }
-        List<Document> results = new LinkedList();
-        list.forEach(doc -> results.add(doc.document));
-        return results;
+        return sortResults(list, sb, asc);
     }
     
     private final SortedList<DocumentWrap> docs;
@@ -65,6 +76,60 @@ public class TinySearchEngine implements TinySearchEngineBase {
                 });
         });
         return list;
+    }
+    
+    private List<Document> sortResults(SortedList<Result> results, SortBy sortBy, boolean sortAsc) {
+        LinkedList<Document> list = new LinkedList();
+        switch(sortBy) {
+            case SORTBY_DOCUMENT:
+                if (sortAsc)
+                    results.bubbleSort((i0, i1) ->
+                            -((Result)i0).document.compareTo(((Result)i1).document)
+                    );
+                break;
+                
+            case SORTBY_COUNT:
+                if (sortAsc)
+                    results.bubbleSort((i0, i1) ->
+                            ((Result)i0).attr.count - ((Result)i1).attr.count
+                    );
+                else
+                    results.bubbleSort((i0, i1) ->
+                            ((Result)i1).attr.count - ((Result)i0).attr.count
+                    );
+                break;
+                
+            case SORTBY_POPULARITY:
+                if (sortAsc)
+                    results.bubbleSort((i0, i1) ->
+                            ((Result)i0).document.popularity - ((Result)i1).document.popularity
+                    );
+                else
+                    results.bubbleSort((i0, i1) ->
+                            ((Result)i1).document.popularity - ((Result)i0).document.popularity
+                    );
+                break;
+                
+            case SORTBY_OCCURANCE:
+                if (sortAsc)
+                    results.bubbleSort((i0, i1) ->
+                            ((Result)i0).attr.occurance - ((Result)i1).attr.occurance
+                    );
+                else
+                    results.bubbleSort((i0, i1) ->
+                            ((Result)i1).attr.occurance - ((Result)i0).attr.occurance
+                    );
+                break;
+        }
+        results.forEach(doc -> list.add(doc.document));
+        return list;
+    }
+    
+    private enum SortBy {
+        SORTBY_DOCUMENT,
+        SORTBY_COUNT,
+        SORTBY_POPULARITY,
+        SORTBY_OCCURANCE
     }
     
     private class Result implements Comparable<Result> {
