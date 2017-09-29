@@ -6,8 +6,10 @@
 package com.mycompany.project;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
 import java.util.ListIterator;
 import java.util.function.Consumer;
 
@@ -73,21 +75,29 @@ public class SortedList<T extends Comparable<T>> {
         list.forEach(action);
     }
     
-    public SortedList<T> bubbleSort(Comparator<? super T> comp) {
+    /**
+     * Creates a copy of the internal list and bubble-sorts it with the given criteria
+     * This operation is safe, as in the SortedList will still operate as expected
+     * 
+     * @param comp lambda expression for comparison
+     * @return new sorted List<T>
+     */
+    public List<T> bubbleSort(Comparator<? super T> comp) {
         int r = list.size() - 1;
+        ArrayList<T> retList = new ArrayList(list);
         boolean swapped = true;
         while (swapped && r >= 0) {
             swapped = false;
             for (int i = 0; i < r; i++)
-                if (comp.compare(list.get(i), list.get(i + 1)) > 0) {
-                    T x = list.get(i);
-                    list.set(i, list.get(i + 1));
-                    list.set(i + 1, x);
+                if (comp.compare(retList.get(i), retList.get(i + 1)) > 0) {
+                    T x = retList.get(i);
+                    retList.set(i, retList.get(i + 1));
+                    retList.set(i + 1, x);
                     swapped = true;
                 }
             r--;
         }
-        return this;
+        return retList;
     }
     
     /**
